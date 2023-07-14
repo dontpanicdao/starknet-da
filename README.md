@@ -2,12 +2,13 @@
     <h1>Starknet Data Availability</h1>
     <img src="assets/DAtoshi.jpg" height="256">
     <br>
+    <br>
+    <a href="https://docs.google.com/presentation/d/1Jv_URt6uLy_kTS0GCjXnG7I3kdkfFDFB3k-Hc1j-Z_g/edit?usp=sharing"><img src="https://img.shields.io/badge/pres-starknet--cc-blue)"/></a>
+    <a href="https://docs.starknet.io/documentation/architecture_and_concepts/Data_Availability/on-chain-data"><img src="https://img.shields.io/badge/docs-da-blue)"/></a>
+    <a href="https://goerli.etherscan.io/address/0xde29d060D45901Fb19ED6C6e959EB22d8626708e"><img src="https://img.shields.io/badge/core--contracts-goerli-blue)"/></a>
+    <a href="https://goerli.etherscan.io/address/0x8f97970aC5a9aa8D130d35146F5b59c4aef57963"><img src="https://img.shields.io/badge/verifier-goerli-blue)"/></a>
 </div>
 
-[![Pres](https://img.shields.io/badge/pres-starknet--cc-blue)](https://docs.google.com/presentation/d/1Jv_URt6uLy_kTS0GCjXnG7I3kdkfFDFB3k-Hc1j-Z_g/edit?usp=sharing)
-[![Docs](https://img.shields.io/badge/docs-da-blue)](https://docs.starknet.io/documentation/architecture_and_concepts/Data_Availability/on-chain-data)
-[![CCs](https://img.shields.io/badge/core--contracts-goerli-blue)](https://goerli.etherscan.io/address/0xde29d060D45901Fb19ED6C6e959EB22d8626708e)
-[![Verifiers](https://img.shields.io/badge/verifier-goerli-blue)](https://goerli.etherscan.io/address/0x8f97970aC5a9aa8D130d35146F5b59c4aef57963)
 
 ## Setup
 
