@@ -2,8 +2,10 @@
     <h1>Starknet Data Availability</h1>
     <img src="assets/DAtoshi.jpg" height="256">
     <br>
+    <a href="https://docs.google.com/presentation/d/1Jv_URt6uLy_kTS0GCjXnG7I3kdkfFDFB3k-Hc1j-Z_g/edit?usp=sharing">
+        <button>presentation</button>
+    </a>
 </div>
-[![presentation](https://docs.rs/anthropic/badge.svg)](https://docs.google.com/presentation/d/1Jv_URt6uLy_kTS0GCjXnG7I3kdkfFDFB3k-Hc1j-Z_g/edit?usp=sharing)
 
 ## Setup
 
