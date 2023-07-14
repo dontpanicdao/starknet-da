@@ -1,10 +1,14 @@
 %builtins output
 
 // Compile:
-// cairo-compile da.cairo --output da_compiled.json
+// cairo-compile da.cairo --output build/da_compiled.json
 
 // Run w/ Debug Info:
 // cairo-run --program da_compiled.json --print_memory --print_info --relocate_prints --layout=small
+
+// Run w/ PIE Info:
+// cairo-run --program da_compiled.json --layout=starknet_with_keccak --cairo_pie_output=build/da.pie.zip
+// unzip da.pie.zip -d build
 
 // Submit to SHARP:
 // cairo-sharp submit --program da_compiled.json
