@@ -2,50 +2,67 @@
     <h1>Starknet Data Availability</h1>
     <img src="assets/DAtoshi.jpg" height="256">
     <br>
-    <a href="https://docs.google.com/presentation/d/1Jv_URt6uLy_kTS0GCjXnG7I3kdkfFDFB3k-Hc1j-Z_g/edit?usp=sharing">
-        <button>presentation</button>
-    </a>
 </div>
+
+[![Pres](https://img.shields.io/badge/pres-starknet--cc-blue)](https://docs.google.com/presentation/d/1Jv_URt6uLy_kTS0GCjXnG7I3kdkfFDFB3k-Hc1j-Z_g/edit?usp=sharing)
+[![Docs](https://img.shields.io/badge/docs-da-blue)](https://docs.starknet.io/documentation/architecture_and_concepts/Data_Availability/on-chain-data)
+[![CCs](https://img.shields.io/badge/core--contracts-goerli-blue)](https://goerli.etherscan.io/address/0xde29d060D45901Fb19ED6C6e959EB22d8626708e)
+[![Verifiers](https://img.shields.io/badge/verifier-goerli-blue)](https://goerli.etherscan.io/address/0x8f97970aC5a9aa8D130d35146F5b59c4aef57963)
 
 ## Setup
 
-#### Homebrew in macOS
-
-```sh
-brew update
-brew install pyenv
-```
-
 #### Automatic installer
 
-`curl https://pyenv.run | bash`
+```sh
+# sudo apt install -y libgmp3-dev
+# brew install gmp
+curl https://pyenv.run | bash
+source <(profile)>
+pyenv install 3.9 && pyenv local 3.9
+```
 
+#### Init Cairo Env
+
+```sh
+python -m venv ~/cairo_venv
+source ~/cairo_venv/bin/activate
+pip install cairo-lang
+```
 
 # Section 1 - SHARP
 
-// Compile:
-// cairo-compile section-1/sharp.cairo --output build/sharp_compiled.json
+#### compile
+```sh
+cairo-compile section-1/sharp.cairo --output build/sharp_compiled.json
+```
 
-// Run w/ Debug Info:
-// cairo-run --program build/sharp_compiled.json --print_memory --print_info --relocate_prints --layout=small
+#### run w/ debug info
+```sh
+cairo-run --program build/sharp_compiled.json --print_memory --print_info --relocate_prints --layout=small
+```
 
-// Submit to SHARP:
-// cairo-sharp submit --program build/sharp_compiled.json
-
+#### submit to SHARP
+```sh
+cairo-sharp submit --program build/sharp_compiled.json
+```
 
 # Section 2 - Fact Registries
 
-// Compile:
-// cairo-compile section-2/da.cairo --output build/da_compiled.json
+#### compile
+```sh
+cairo-compile section-2/da.cairo --output build/da_compiled.json
+```
 
-// Run w/ PIE Info:
-// cairo-run --program section-2/da_compiled.json --layout=small --cairo_pie_output=build/da.pie.zip
-// unzip build/da.pie.zip -d build
+#### run w/ PIE info
+```sh
+cairo-run --program section-2/da_compiled.json --layout=small --cairo_pie_output=build/da.pie.zip
+unzip build/da.pie.zip -d build
+```
 
-// Compute Fact:
-// cairo-hash-program --program da_compiled.json
-
+#### compute fact
+```sh
+cairo-hash-program --program da_compiled.json
+```
 
 # Section 3 - Starknet
 
-[Contract Addresses](https://github.com/starknet-io/starknet-addresses)
