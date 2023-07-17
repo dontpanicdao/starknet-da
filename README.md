@@ -71,7 +71,8 @@ python section-2/fact_check.py
 
 # Section 3 - Starknet
 ```sh
-python section-3/fact-retrieval.py --from_block 52144 \
+python section-3/fact_retrieval.py --from_block 52144 \
+--contracts_abi_file assets/starknet_verifier_abi.json
 --web3_node https://goerli.infura.io/v3/ca0bc142fd6d4090838eebb88a36596f \
--b 0x1da36bf5ea606a1c9936fc4d044bbb36607fb3b263a4a1b020ea87a3d1c46be4 
+--fact 0x1da36bf5ea606a1c9936fc4d044bbb36607fb3b263a4a1b020ea87a3d1c46be4 
 ```

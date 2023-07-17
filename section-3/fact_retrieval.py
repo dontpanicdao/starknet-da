@@ -218,6 +218,7 @@ def parse_storage_updates(diffs):
 def main():
     GOERLI_NODE = 'https://goerli.infura.io/v3/efaaed1253b8458abf2b8669ae9e9223'
     contract_names = ["GpsStatementVerifier", "MemoryPageFactRegistry"]
+    # contract_names = ["starknet_verifier_abi.json"]
     parser = argparse.ArgumentParser()
 
     # Note that Registration of memory pages happens before the state update transaction, hence
@@ -226,7 +227,7 @@ def main():
                         help='find memory pages written after this block')
     parser.add_argument('--web3_node', dest='web3_node', default=GOERLI_NODE,
                         help='rpc node url')
-    parser.add_argument('--contracts_abi_file', dest='contracts_abi_file', default="contracts.json",
+    parser.add_argument('--contracts_abi_file', dest='contracts_abi_file', default="../assets/contracts.json",
                         help='name of the json file containing the abi of the GpsVerifier and MemoryPageFactRegistry')
 
     parser.add_argument('--fact', dest='fact', default="983e4a7350a46070642a1ba0e6df4b097d527633c1ef256a2140c9ad0f264587",
