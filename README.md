@@ -41,7 +41,14 @@ cairo-compile section-1/sharp.cairo --output build/sharp_compiled.json
 
 #### run w/ debug info
 ```sh
-cairo-run --program build/sharp_compiled.json --print_memory --print_info --relocate_prints --layout=small
+cairo-run --program build/sharp_compiled.json --print_memory --print_info --relocate_prints --layout=small --trace_file build/sharp_trace
+```
+
+# Section 2 - Fact Registries
+
+#### compile
+```sh
+cairo-compile section-2/fact.cairo --output build/fact_compiled.json
 ```
 
 #### submit to SHARP
@@ -50,22 +57,16 @@ cairo-sharp submit --program build/sharp_compiled.json
 cairo-sharp status <JOB_ID>
 ```
 
-# Section 2 - Fact Registries
-
-#### compile
-```sh
-cairo-compile section-2/da.cairo --output build/da_compiled.json
-```
-
 #### run w/ PIE info
 ```sh
-cairo-run --program section-2/da_compiled.json --layout=small --cairo_pie_output=build/da.pie.zip
-unzip build/da.pie.zip -d build
+cairo-run --program section-2/fact_compiled.json --layout=small --cairo_pie_output=build/da.pie.zip
+unzip build/fact.pie.zip -d build
 ```
 
 #### compute fact
 ```sh
-cairo-hash-program --program da_compiled.json
+cairo-hash-program --program build/fact_compiled.json
+python section-2/fact_check.py
 ```
 
 # Section 3 - Starknet

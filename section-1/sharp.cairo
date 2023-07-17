@@ -1,5 +1,9 @@
 %builtins output
 
+// Rough Trace Cell Calculation:
+// 4 Cairo Steps x 50 trace cells + Output Builtin Ratio x 5/1 trace cells
+// ----------------
+// 205 trace cells  
 func main(output_ptr: felt*) -> (output_ptr: felt*) {
     // assign 100 to the first unused memory cell and advance ap
     [ap] = 100;
