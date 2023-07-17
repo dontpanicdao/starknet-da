@@ -46,6 +46,17 @@ func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 }
 
 //
+// '@view' functions can be used to read contract storage
+//
+@view
+func get_single_store{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (
+    value: felt
+) {
+    let (value) = single_store.read();
+    return (value,);
+}
+
+//
 // '@external' functions can be used to write to contract storage
 //
 @external

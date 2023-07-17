@@ -177,7 +177,7 @@ def get_contract_events(
     ]
     for query_from_block, query_to_block in split_queries:
         events.extend(
-            list(contract_event.getLogs(
+            list(contract_event.get_logs(
                 fromBlock=query_from_block, toBlock=query_to_block))
         )
     return events

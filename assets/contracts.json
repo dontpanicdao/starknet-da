@@ -36,7 +36,7 @@
                 "type": "function"
             }
         ],
-        "address": "0xB02D49C4d89f0CeA504C4C93934E7fC66e20A257"
+        "address": "0xAB43bA48c9edF4C2C4bB01237348D1D7B28ef168"
     },
     "MemoryPageFactRegistry": {
         "abi": [
@@ -117,6 +117,6 @@
                 "type": "function"
             }
         ],
-        "address": "0xb609Eba1DC0298A984Fa8a34528966E997C5BB13"
+        "address": "0x01d48Efa0e1b520300C0958F50AF30E2951EC4e0"
     }
 }

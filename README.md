@@ -15,8 +15,8 @@
 #### Automatic installer
 
 ```sh
-# sudo apt install -y libgmp3-dev
-# brew install gmp
+# sudo apt install -y libgmp3-dev jq
+# brew install gmp jq
 curl https://pyenv.run | bash
 source <(profile)>
 pyenv install 3.9 && pyenv local 3.9
@@ -70,9 +70,38 @@ python section-2/fact_check.py
 ```
 
 # Section 3 - Starknet
+
 ```sh
-python section-3/fact_retrieval.py --from_block 52144 \
---contracts_abi_file assets/starknet_verifier_abi.json
+curl --location 'https://alpha4.starknet.io/feeder_gateway/get_state_update?blockNumber=latest' | jq
+```
+
+#### set env vars
+
+NOTE: don't copy accounts json if you already have an existing one
+```sh
+export STARKNET_WALLET=starkware.starknet.wallets.open_zeppelin.OpenZeppelinAccount
+export STARKNET_NETWORK=alpha-goerli
+export STARKNET_FEEDER_GATEWAY_URL=http://localhost:5050
+export STARKNET_GATEWAY_URL=http://localhost:5050
+cp assets/starknet_open_zeppelin_accounts.json ~/.starknet_accounts
+```
+
+#### deploy storage contract
+```sh
+starknet-devnet --seed 0
+starknet-compile-deprecated section-3/storage.cairo --output build/storage_compiled.json
+starknet declare --account devnet --contract build/storage_compiled.json --deprecated --gateway_url http://localhost:5050 --feeder_gateway_url http://localhost:5050
+starknet invoke --address 0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf --account devnet --gateway_url http://localhost:5050 --feeder_gateway_url http://localhost:5050  --abi assets/udc.json  --function deployContract  --inputs 0x6fa450e1381e13f22d1bc5a6ef56edfe9fafd7f4b3a7d483b8c14de83a5be6f 0 0 0
+```
+
+#### query storage keys
+
+```sh
+curl --location 'http://localhost:5050/feeder_gateway/get_storage_at?contractAddress=<ADDRESS>&key=<KEY>'
+```
+
+<!-- ```sh
+python section-3/fact_retrieval.py \
 --web3_node https://goerli.infura.io/v3/ca0bc142fd6d4090838eebb88a36596f \
 --fact 0x1da36bf5ea606a1c9936fc4d044bbb36607fb3b263a4a1b020ea87a3d1c46be4 
-```
+``` -->
