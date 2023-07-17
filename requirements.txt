@@ -1,0 +1,6 @@
+cairo-lang
+eth_typing
+requests
+starknet-devnet
+typing
+web3

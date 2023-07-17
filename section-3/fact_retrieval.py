@@ -234,7 +234,7 @@ def main():
 
     args = parser.parse_args()
     w3 = web3.Web3(web3.HTTPProvider(args.web3_node))
-    assert w3.isConnected(
+    assert w3.is_connected(
     ), f"Cannot connect to http provider {args.web3_node}."
     contracts_path = os.path.join(
         os.path.dirname(__file__), args.contracts_abi_file)

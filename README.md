@@ -25,9 +25,10 @@ pyenv install 3.9 && pyenv local 3.9
 #### Init Cairo Env
 
 ```sh
-python -m venv ~/cairo_venv
+python3.9 -m venv ~/cairo_venv
 source ~/cairo_venv/bin/activate
-pip install cairo-lang
+pip install -r requirements.txt
+mkdir build
 ```
 
 # Section 1 - SHARP
@@ -36,6 +37,7 @@ pip install cairo-lang
 ```sh
 cairo-compile section-1/sharp.cairo --output build/sharp_compiled.json
 ```
+[cairo playground](https://www.cairo-lang.org/playground)
 
 #### run w/ debug info
 ```sh
@@ -45,6 +47,7 @@ cairo-run --program build/sharp_compiled.json --print_memory --print_info --relo
 #### submit to SHARP
 ```sh
 cairo-sharp submit --program build/sharp_compiled.json
+cairo-sharp status <JOB_ID>
 ```
 
 # Section 2 - Fact Registries
@@ -66,4 +69,8 @@ cairo-hash-program --program da_compiled.json
 ```
 
 # Section 3 - Starknet
-
+```sh
+python section-3/fact-retrieval.py --from_block 52144 \
+--web3_node https://goerli.infura.io/v3/ca0bc142fd6d4090838eebb88a36596f \
+-b 0x1da36bf5ea606a1c9936fc4d044bbb36607fb3b263a4a1b020ea87a3d1c46be4 
+```
