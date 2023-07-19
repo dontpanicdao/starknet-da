@@ -31,13 +31,13 @@ pip install -r requirements.txt
 mkdir build
 ```
 
-# Section 1 - SHARP
+# Section 1 - [SHARP](https://www.cairo-lang.org/playground)
 
 #### compile
 ```sh
 cairo-compile section-1/sharp.cairo --output build/sharp_compiled.json
 ```
-[cairo playground](https://www.cairo-lang.org/playground)
+
 
 #### run w/ debug info
 ```sh
