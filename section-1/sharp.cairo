@@ -1,7 +1,7 @@
 %builtins output
 
-// Rough Trace Cell Calculation:
-// 4 Cairo Steps x 50 trace cells + Output Builtin Ratio x 5/1 trace cells
+// Rough Trace Cell Calculation(no builtin ratios):
+// 4 Cairo Steps x 50 trace cells + 5 trace cells
 // ----------------
 // 205 trace cells  
 func main(output_ptr: felt*) -> (output_ptr: felt*) {
