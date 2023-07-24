@@ -97,7 +97,8 @@ starknet invoke --address 0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7
 #### query storage keys
 
 ```sh
-curl --location 'http://localhost:5050/feeder_gateway/get_storage_at?contractAddress=<ADDRESS>&key=<KEY>'
+python section-3/storage.py
+curl --location 'http://localhost:5050/feeder_gateway/get_storage_at?contractAddress=<ADDRESS>&key=<INT KEY FROM SCRIPT>'
 ```
 
 <!-- ```sh

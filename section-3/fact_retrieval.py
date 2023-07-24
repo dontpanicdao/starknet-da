@@ -58,6 +58,7 @@ def _initialize_fact_memory_hashes_map(
                 to_block=to_block,
             )
         )
+    print("THIS: ", statement_verifier_events)
     return {
         event["args"]["factHash"]: event["args"]["pagesHashes"]
         for event in statement_verifier_events
@@ -118,23 +119,19 @@ class MemoryPagesFetcher:
             memory_page_fact_registry_contract=memory_page_fact_registry_contract,
         )
 
-    def _get_memory_pages_hashes_from_fact(self, fact_hash: bytes):
-        """
-        An auxiliary function for retrieveing the memory pages' hashes of a fact.
-        """
-        if fact_hash not in self.fact_memory_pages_map:
-            raise Exception(
-                f"Fact hash {fact_hash.hex()} was not registered in the verifier contracts."
-            )
-        return self.fact_memory_pages_map[fact_hash]
-
     def get_memory_pages_from_fact(self, fact_hash: bytes) -> List[List[int]]:
         """
         Given a fact hash, retrieves the memory pages which are relevant for that fact.
         """
         memory_pages = []
-        memory_pages_hashes = self._get_memory_pages_hashes_from_fact(
-            fact_hash)
+
+        if fact_hash not in self.fact_memory_pages_map:
+            raise Exception(
+                f"Fact hash {fact_hash.hex()} was not registered in the verifier contracts."
+            )
+        
+        memory_pages_hashes = self.fact_memory_pages_map[fact_hash]
+
         assert memory_pages_hashes is not None
         for memory_page_hash in memory_pages_hashes:
             transaction_str = self.memory_page_transactions_map[
@@ -223,7 +220,7 @@ def main():
 
     # Note that Registration of memory pages happens before the state update transaction, hence
     # make sure to use from_block which preceeds (~500 blocks) the block of the state transition fact
-    parser.add_argument('--from_block', dest='from_block', default=5742000,
+    parser.add_argument('--from_block', dest='from_block', default=9380000,
                         help='find memory pages written after this block')
     parser.add_argument('--web3_node', dest='web3_node', default=GOERLI_NODE,
                         help='rpc node url')
@@ -244,33 +241,37 @@ def main():
     )
     (gps_statement_verifier_contract, memory_pages_contract) = [
         contracts_dict[contract_name] for contract_name in contract_names]
+
     memory_pages_fetcher = MemoryPagesFetcher.create(
         web3=w3,
         from_block=args.from_block,
         gps_statement_verifier_contract=gps_statement_verifier_contract,
         memory_page_fact_registry_contract=memory_pages_contract
     )
+
     pages = memory_pages_fetcher.get_memory_pages_from_fact(
         bytes.fromhex(args.fact))
+    print("PAGES: ", pages)
     # Interpetation of pages
-    state_diff = pages[1:]  # ignore first page
-    diffs = [item for page in state_diff for item in page]  # flatten
-    len_deployments = diffs.pop(0)
-    deployments_data = list(map(lambda arg: hex(int(arg)) if int(
-        arg) > 10**10 else int(arg), diffs[0:len_deployments]))
-    storage_updates = parse_storage_updates(diffs[len_deployments:])
-    deployed_contracts = {}
-    while len(deployments_data) > 0:
-        contract_address = deployments_data.pop(0)
-        deployed_contracts[contract_address] = {}
-        deployed_contracts[contract_address]['contract_hash'] = deployments_data.pop(
-            0)
-        num_constructor_args = deployments_data.pop(0)
-        deployed_contracts[contract_address]['constructor arguments'] = deployments_data[0:num_constructor_args]
-        deployments_data = deployments_data[num_constructor_args:]
+    # print("PAGES: ", pages)
+    # state_diff = pages[1:]  # ignore first page
+    # diffs = [item for page in state_diff for item in page]  # flatten
+    # len_deployments = diffs.pop(0)
+    # deployments_data = list(map(lambda arg: hex(int(arg)) if int(
+    #     arg) > 10**10 else int(arg), diffs[0:len_deployments]))
+    # storage_updates = parse_storage_updates(diffs[len_deployments:])
+    # deployed_contracts = {}
+    # while len(deployments_data) > 0:
+    #     contract_address = deployments_data.pop(0)
+    #     deployed_contracts[contract_address] = {}
+    #     deployed_contracts[contract_address]['contract_hash'] = deployments_data.pop(
+    #         0)
+    #     num_constructor_args = deployments_data.pop(0)
+    #     deployed_contracts[contract_address]['constructor arguments'] = deployments_data[0:num_constructor_args]
+    #     deployments_data = deployments_data[num_constructor_args:]
 
-    print(storage_updates)
-    print(deployed_contracts)
+    # print(storage_updates)
+    # print(deployed_contracts)
 
 
 if __name__ == "__main__":
