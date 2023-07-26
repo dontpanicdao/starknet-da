@@ -101,8 +101,6 @@ python section-3/storage.py
 curl --location 'http://localhost:5050/feeder_gateway/get_storage_at?contractAddress=<ADDRESS>&key=<INT KEY FROM SCRIPT>'
 ```
 
-<!-- ```sh
-python section-3/fact_retrieval.py \
---web3_node https://goerli.infura.io/v3/<API KEY> \
---fact 6af8d6bf285abfa41794d2a12f90b3bf2733a9e864102cdb877378285461709f 
-``` -->
+```sh
+python section-3/fact_retrieval.py --web3_node https://goerli.infura.io/v3/<API KEY> --da_output build/out.txt
+```
