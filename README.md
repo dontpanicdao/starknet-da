@@ -103,6 +103,6 @@ curl --location 'http://localhost:5050/feeder_gateway/get_storage_at?contractAdd
 
 <!-- ```sh
 python section-3/fact_retrieval.py \
---web3_node https://goerli.infura.io/v3/ca0bc142fd6d4090838eebb88a36596f \
---fact 0x1da36bf5ea606a1c9936fc4d044bbb36607fb3b263a4a1b020ea87a3d1c46be4 
+--web3_node https://goerli.infura.io/v3/<API KEY> \
+--fact 6af8d6bf285abfa41794d2a12f90b3bf2733a9e864102cdb877378285461709f 
 ``` -->
