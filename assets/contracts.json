@@ -7,7 +7,7 @@
                     {
                         "indexed": false,
                         "internalType": "bytes32",
-                        "name": "factHash",
+                        "name": "programOutputFact",
                         "type": "bytes32"
                     },
                     {
@@ -36,7 +36,7 @@
                 "type": "function"
             }
         ],
-        "address": "0x8f97970aC5a9aa8D130d35146F5b59c4aef57963"
+        "address": "0xb59D5F625b63fbb04134213A526AA3762555B853"
     },
     "MemoryPageFactRegistry": {
         "abi": [

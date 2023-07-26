@@ -9,61 +9,6 @@ from typing import Dict, List
 from eth_typing.encoding import HexStr
 from web3 import Web3
 from web3.contract import Contract
-logger = logging.getLogger(__name__)
-
-
-def _initialize_memory_page_map(
-    memory_page_fact_registry_contract: Contract, from_block: int, to_block: int
-) -> Dict[int, str]:
-    """
-    Returns a mapping between the memory pages' hashes and the Ethereum transaction's hash for the
-    transactions in blocks [from_block, to_block).
-    """
-    memory_page_contract_event = (
-        memory_page_fact_registry_contract.events.LogMemoryPageFactContinuous
-    )
-    logger.info(
-        f"Constructing memory pages dictionary for blocks [{from_block}, {to_block}].")
-    memory_page_events = get_contract_events(
-        contract_event=memory_page_contract_event, from_block=from_block, to_block=to_block
-    )
-    return {
-        event["args"]["memoryHash"]: event["transactionHash"].hex() for event in memory_page_events
-    }
-
-
-def _initialize_fact_memory_hashes_map(
-    statement_verifier_impl_contracts: List[Contract], from_block: int, to_block: int
-) -> Dict[bytes, bytes]:
-    """
-    Given a list of statement verifier implementation contracts and block numbers, returns a mapping
-    between Cairo job's fact and the memory pages hashes for each verifier contract.
-    """
-    statement_verifier_events = []
-    for statement_verifier_impl_contract in statement_verifier_impl_contracts:
-        # Asserts that the contract is a statement verifier implementation contract.
-        assert (
-            "GpsStatementVerifier" in statement_verifier_impl_contract.functions.identify().call()
-        ), (
-            f"Contract with address {statement_verifier_impl_contract.address} is not a "
-            "statement verifier contract."
-        )
-        statement_verifier_contract_event = (
-            statement_verifier_impl_contract.events.LogMemoryPagesHashes
-        )
-        statement_verifier_events.extend(
-            get_contract_events(
-                contract_event=statement_verifier_contract_event,
-                from_block=from_block,
-                to_block=to_block,
-            )
-        )
-    print("THIS: ", statement_verifier_events)
-    return {
-        event["args"]["factHash"]: event["args"]["pagesHashes"]
-        for event in statement_verifier_events
-    }
-
 
 class MemoryPagesFetcher:
     """
@@ -89,7 +34,6 @@ class MemoryPagesFetcher:
     def create(
         cls,
         web3: Web3,
-        from_block: int,
         gps_statement_verifier_contract: Contract,
         memory_page_fact_registry_contract: Contract
     ) -> "MemoryPagesFetcher":
@@ -98,20 +42,32 @@ class MemoryPagesFetcher:
         If is_verifier_proxied is true, then gps_statement_verifier_contract is the proxy contract
         rather than the statement verifier implemantation.
         """
-        #last_block = web3.eth.block_number
-        last_block = from_block + 10000
-        memory_page_transactions_map = _initialize_memory_page_map(
-            memory_page_fact_registry_contract=memory_page_fact_registry_contract,
-            from_block=from_block,
-            to_block=last_block,
-        )
-        gps_statement_verifier_impl_contracts = [
-            gps_statement_verifier_contract]
-        fact_memory_pages_map = _initialize_fact_memory_hashes_map(
-            statement_verifier_impl_contracts=gps_statement_verifier_impl_contracts,
-            from_block=from_block,
-            to_block=last_block,
-        )
+        last_block = web3.eth.block_number
+        from_block = last_block - 500
+
+        """
+        Fetch all `LogMemoryPageFactContinuous` events from the MemoryPageFactRegistry
+        """
+        mem_events = []
+        mem_events.extend(list(memory_page_fact_registry_contract.events.LogMemoryPageFactContinuous.get_logs(fromBlock=from_block, toBlock=last_block)))
+        assert len(mem_events) > 0, "0 LogMemoryPageFactContinuous for this Fact Registry"
+        
+        memory_page_transactions_map = {hex(event["args"]["memoryHash"]): event["transactionHash"].hex() for event in mem_events}
+
+        """
+        Fetch all `LogMemoryPagesHashes` events from the GpsStatementVerifier
+        returns a mapping between Cairo job's fact and the memory pages hashes for verifier contract.
+        """
+        statement_verifier_events = []
+        statement_verifier_events.extend(list(gps_statement_verifier_contract.events.LogMemoryPagesHashes.get_logs(fromBlock=from_block, toBlock=last_block)))
+        assert len(statement_verifier_events) > 0, "0 LogMemoryPagesHashes for this Statement Verifier"
+
+        fact_memory_pages_map = {}
+        for event in statement_verifier_events:
+            pages = ["0x" + page.hex() for page in event["args"]["pagesHashes"]]
+            fact_memory_pages_map[event["args"]["programOutputFact"].hex()] = pages
+
+    
         return cls(
             web3=web3,
             memory_page_transactions_map=memory_page_transactions_map,
@@ -123,61 +79,22 @@ class MemoryPagesFetcher:
         """
         Given a fact hash, retrieves the memory pages which are relevant for that fact.
         """
-        memory_pages = []
-
         if fact_hash not in self.fact_memory_pages_map:
-            raise Exception(
-                f"Fact hash {fact_hash.hex()} was not registered in the verifier contracts."
-            )
+            raise Exception(f"Fact hash {fact_hash} was not registered in the verifier contracts.")
         
+        memory_pages = []
         memory_pages_hashes = self.fact_memory_pages_map[fact_hash]
 
-        assert memory_pages_hashes is not None
         for memory_page_hash in memory_pages_hashes:
-            transaction_str = self.memory_page_transactions_map[
-                int.from_bytes(memory_page_hash, "big")
-            ]
-            memory_pages_tx = self.web3.eth.getTransaction(
-                HexStr(transaction_str))
+            transaction_str = self.memory_page_transactions_map[memory_page_hash]
+
+            memory_pages_tx = self.web3.eth.get_transaction(HexStr(transaction_str))
+
             inp = memory_pages_tx["input"]
-            tx_decoded_values = self.memory_page_fact_registry_contract.decode_function_input(
-                memory_pages_tx["input"]
-            )[1]["values"]
+            tx_decoded_values = self.memory_page_fact_registry_contract.decode_function_input(memory_pages_tx["input"])[1]["values"]
             memory_pages.append(tx_decoded_values)
+
         return memory_pages
-
-
-DEFUALT_GET_LOGS_MAX_CHUNK_SIZE = 10 ** 6
-
-
-def get_contract_events(
-    contract_event,
-    from_block: int,
-    to_block: int,
-    get_logs_max_chunk_size: int = DEFUALT_GET_LOGS_MAX_CHUNK_SIZE,
-) -> list:
-    """
-    Given a contract event and block numbers, retrieves a list of events in blocks
-    [from_block, to_block).
-    Splits the query in order to avoid Infura's maximal query limitation.
-    See https://infura.io/docs/ethereum/json-rpc/eth_getLogs.
-    """
-    events = []
-    assert from_block <= to_block
-    split_queries_block_nums = list(
-        range(from_block, to_block, get_logs_max_chunk_size))
-    split_queries = [
-        (query_from_block, query_to_block)
-        for query_from_block, query_to_block in zip(
-            split_queries_block_nums, split_queries_block_nums[1:] + [to_block]
-        )
-    ]
-    for query_from_block, query_to_block in split_queries:
-        events.extend(
-            list(contract_event.get_logs(
-                fromBlock=query_from_block, toBlock=query_to_block))
-        )
-    return events
 
 
 def load_contracts(
@@ -213,49 +130,33 @@ def parse_storage_updates(diffs):
 
 
 def main():
-    GOERLI_NODE = 'https://goerli.infura.io/v3/efaaed1253b8458abf2b8669ae9e9223'
     contract_names = ["GpsStatementVerifier", "MemoryPageFactRegistry"]
-    # contract_names = ["starknet_verifier_abi.json"]
     parser = argparse.ArgumentParser()
 
     # Note that Registration of memory pages happens before the state update transaction, hence
     # make sure to use from_block which preceeds (~500 blocks) the block of the state transition fact
-    parser.add_argument('--from_block', dest='from_block', default=9380000,
-                        help='find memory pages written after this block')
-    parser.add_argument('--web3_node', dest='web3_node', default=GOERLI_NODE,
-                        help='rpc node url')
-    parser.add_argument('--contracts_abi_file', dest='contracts_abi_file', default="../assets/contracts.json",
-                        help='name of the json file containing the abi of the GpsVerifier and MemoryPageFactRegistry')
-
-    parser.add_argument('--fact', dest='fact', default="983e4a7350a46070642a1ba0e6df4b097d527633c1ef256a2140c9ad0f264587",
-                        help='the fact whose associated memory pages will be returned')
+    parser.add_argument('--web3_node', dest='web3_node', default="must have node", help='rpc node url')
+    parser.add_argument('--fact', dest='fact', default="983e4a7350a46070642a1ba0e6df4b097d527633c1ef256a2140c9ad0f264587", type=str.lower)
 
     args = parser.parse_args()
+    
     w3 = web3.Web3(web3.HTTPProvider(args.web3_node))
-    assert w3.is_connected(
-    ), f"Cannot connect to http provider {args.web3_node}."
-    contracts_path = os.path.join(
-        os.path.dirname(__file__), args.contracts_abi_file)
-    contracts_dict = load_contracts(
-        web3=w3, contracts_file=contracts_path, contracts_names=contract_names
-    )
-    (gps_statement_verifier_contract, memory_pages_contract) = [
-        contracts_dict[contract_name] for contract_name in contract_names]
+    assert w3.is_connected(), f"Cannot connect to http provider {args.web3_node}."
+
+    verifier_contracts_path = os.path.join(os.path.dirname(__file__), "../assets/contracts.json")
+    verifier_contracts_dict = load_contracts(web3=w3, contracts_file=verifier_contracts_path, contracts_names=contract_names)
+    (gps_statement_verifier_contract, memory_pages_contract) = [verifier_contracts_dict[contract_name] for contract_name in contract_names]
 
     memory_pages_fetcher = MemoryPagesFetcher.create(
         web3=w3,
-        from_block=args.from_block,
         gps_statement_verifier_contract=gps_statement_verifier_contract,
         memory_page_fact_registry_contract=memory_pages_contract
     )
 
-    pages = memory_pages_fetcher.get_memory_pages_from_fact(
-        bytes.fromhex(args.fact))
-    print("PAGES: ", pages)
-    # Interpetation of pages
-    # print("PAGES: ", pages)
-    # state_diff = pages[1:]  # ignore first page
-    # diffs = [item for page in state_diff for item in page]  # flatten
+    pages = memory_pages_fetcher.get_memory_pages_from_fact(args.fact)
+
+    state_diff = pages[1:]  # ignore first page
+    diffs = [item for page in state_diff for item in page]  # flatten
     # len_deployments = diffs.pop(0)
     # deployments_data = list(map(lambda arg: hex(int(arg)) if int(
     #     arg) > 10**10 else int(arg), diffs[0:len_deployments]))
