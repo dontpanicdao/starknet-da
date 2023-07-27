@@ -1,21 +1,21 @@
 import argparse
 import json
 import web3
+import requests
+import os
 from web3.exceptions import InvalidAddress
 from typing import Dict, List
-import os
-import logging
 from typing import Dict, List
 from eth_typing.encoding import HexStr
 from web3 import Web3
 from web3.contract import Contract
 
+NONCE_BASE = 2 ** 64
+
 def main():
     contract_names = ["GpsStatementVerifier", "MemoryPageFactRegistry", "StarknetCoreContracts"]
     parser = argparse.ArgumentParser()
 
-    # Note that Registration of memory pages happens before the state update transaction, hence
-    # make sure to use from_block which preceeds (~500 blocks) the block of the state transition fact
     parser.add_argument('--web3_node', dest='web3_node', default="must have node", help='rpc node url')
     parser.add_argument('--da_output', dest='da_output', default=None, help='location for da output')
 
@@ -44,7 +44,8 @@ def main():
     update_index = len(state_updates) - 1
     update_fact = state_update_facts[update_index]["args"]["stateTransitionFact"].hex()
 
-    print("Starknet Block #{}:".format(state_updates[update_index]["args"]["blockNumber"]))
+    sn_block_num = state_updates[update_index]["args"]["blockNumber"]
+    print("Starknet Block #{}:".format(sn_block_num))
     print("\troot - ", state_updates[update_index]["args"]["globalRoot"])
     print("\tfact - ", update_fact)
 
@@ -76,6 +77,7 @@ def main():
                         print("\t\tmem_hash ", event["args"]["memoryHash"])
                         print("\t\ttx_hash ", mem_tx)
                         
+                        # skip first memory page
                         if i > 0:
                             memory_pages_tx = l1_node.eth.get_transaction(HexStr(mem_tx))
 
@@ -86,9 +88,7 @@ def main():
                                 f.write('\n'.join(str(e) for e in fact_input_sn_output))
                                 f.close()
 
-                            print("\t\t\tupdates: ", fact_input_sn_output.pop(0))
-                        
-                        print()
+                            parse_da(fact_input_sn_output)
 
 def load_contracts(
     web3: web3.Web3, contracts_file: str, contracts_names: List[str]
@@ -108,18 +108,50 @@ def load_contracts(
             raise ex
     return res
 
+def parse_da(fact_input_sn_output):
+    """
+    Parse the data availability output from the Starknet OS
+    print the parsed da output
+    0⋯0⏟127 bits|class information flag(1 bit)|new nonce(64 bits)|# of storage updates(64 bits)
+    """
+    num_storage_updates = fact_input_sn_output.pop(0)
+    print("\t\t\tContract Updates - ", num_storage_updates)
+    for j in range(num_storage_updates):
+        contract = fact_input_sn_output.pop(0)
+        print("\t\t\tContract ", contract)
+        da_word = fact_input_sn_output.pop(0)
+        print("\t\t\tDA word ", da_word)
+        if da_word > NONCE_BASE:
+            word = list(bin(da_word))[2:]
+            word_length = len(word)
+            if word_length == 129:
+                class_hash = fact_input_sn_output.pop(0)
+                nonce =  int("".join(str(x) for x in word[1:65]), 2)
+                storage_updates = int("".join(str(x) for x in word[65:]), 2)
+                print("\t\t\t\tcontract deployed or replaced")
+                print("\t\t\t\tnew nonce ", nonce)
+                print("\t\t\t\tstorage updates ", storage_updates)
+                for k in range(storage_updates):
+                    print("\t\t\t\tKey: ", fact_input_sn_output.pop(0))
+                    print("\t\t\t\tValue: ", fact_input_sn_output.pop(0))
 
-def parse_storage_updates(diffs):
-    diffs.pop(0)  # num of contracts updates
-    parsed_diff = {}
-    while len(diffs) > 0:
-        contract_address = hex(int(diffs.pop(0)))
-        num_updates = diffs.pop(0)
-        parsed_diff[contract_address] = {}
-        for _ in range(num_updates):
-            storage_var_address = hex(int(diffs.pop(0)))
-            parsed_diff[contract_address][storage_var_address] = diffs.pop(0)
-    return parsed_diff
+            elif word_length > 64:
+                nonce =  int("".join(str(x) for x in word[:word_length-64]), 2)
+                storage_updates = int("".join(str(x) for x in word[word_length-64:]), 2)
+                print("\t\t\t\tnew nonce ", nonce)
+                print("\t\t\t\tstorage updates ", storage_updates)
+                for k in range(storage_updates):
+                    print("\t\t\t\tKey: ", fact_input_sn_output.pop(0))
+                    print("\t\t\t\tValue: ", fact_input_sn_output.pop(0))
+
+        else:
+            for k in range(da_word):
+                print("\t\t\t\tKey: ", fact_input_sn_output.pop(0))
+                print("\t\t\t\tValue: ", fact_input_sn_output.pop(0))
+        
+        print()
+
+    print("\t\t\tDeclared Classes - ", fact_input_sn_output.pop(0))
 
 if __name__ == "__main__":
     main()
