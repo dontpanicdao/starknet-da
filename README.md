@@ -104,3 +104,9 @@ curl --location 'http://localhost:5050/feeder_gateway/get_storage_at?contractAdd
 ```sh
 python section-3/fact_retrieval.py --web3_node https://goerli.infura.io/v3/<API KEY> --da_output build/out.txt
 ```
+
+#### run starknet os
+
+```sh
+cairo-run --program=assets/os_compiled.json --layout=starknet_with_keccak --program_input=assets/sn_input.json  --cairo_pie_output=build/sn.pie.zip --print_output
+```
